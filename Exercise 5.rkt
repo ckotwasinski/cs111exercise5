@@ -45,10 +45,14 @@
 ; Part 2
 
 ; count-files: path -> number
+(define accumulator 0)
 (define (count-files path)
   (if (empty? (directory-files (build-path path)))
      0
-     void))
+     (begin (for-each (λ (file)
+                (set! accumulator (+ accumulator 1)))
+               (directory-files (build-path path)))
+            accumulator)))
 
 ; directory-size: path -> number
 (define (directory-size path)
