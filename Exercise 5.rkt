@@ -46,7 +46,9 @@
 
 ; count-files: path -> number
 (define (count-files path)
-  "fill me in")
+  (if (empty? (directory-files (build-path path)))
+     0
+     void))
 
 ; directory-size: path -> number
 (define (directory-size path)
