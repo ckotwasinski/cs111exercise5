@@ -22,22 +22,24 @@
     ; for each file (leaf node) in the origin directory,
     ; copy it over to the destination directory
     (for-each (λ (file)
+         (unless (file-exists? (build-path from file)) ;added unless
                 ; print the name of the file being copied into the REPL
                 ; for more on how `printf` works, see Appendix 1 in the pdf
-                (begin
+                  (begin
                   (printf "Copying file ~A to ~A~n" file to)
                   (copy-file! file
                               (build-path to (path-filename file))
-                              #true)))
+                              #true))))
               (directory-files from))
 
     ; for each folder (recursive child node) in the origin directory,
     ; recursively `backup!` its contents
     (for-each (λ (subdir)
-                (backup! subdir
+                (unless (directory-exists? (build-path from subdir)) ;added unless
+                  (backup! subdir
                          ; add the subdirectory's name to the
                          ; end of the original destination path
-                         (build-path to (path-filename subdir))))
+                         (build-path to (path-filename subdir)))))
               (directory-subdirectories from))))
 
 ; Part 2
