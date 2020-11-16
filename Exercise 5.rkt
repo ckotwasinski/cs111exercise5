@@ -46,6 +46,7 @@
 
 ; count-files: path -> number
 (define accumulator 0)
+
 (define (count-files path)
   (if (empty? (directory-files (build-path path)))
      0
@@ -55,8 +56,17 @@
             accumulator)))
 
 ; directory-size: path -> number
+(define accumulator 2)
+
 (define (directory-size path)
-  "fill me in")
+  (if (empty? (directory-files (build-path path)))
+              0
+              (begin (for-each (λ(file)
+                                 (set! accumulator2 (+ accumulator2 (file-size (build-path file)))))
+                               (directory-files (build-path path)))
+                               accumulator2)))
+                               
+(check-expect (directory-size "test/test_2") 520)
 
 ; search-directory: string path -> (listof path)
 (define (search-directory name path)
