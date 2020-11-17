@@ -56,30 +56,21 @@
             accumulator)))
 
 ; directory-size: path -> number
-(define accumulator 2)
-
 (define (directory-size path)
-  (if (empty? (directory-files (build-path path)))
-              0
-              (begin (for-each (λ(file)
-                                 (set! accumulator2 (+ accumulator2 (file-size (build-path file)))))
-                               (directory-files (build-path path)))
-                               accumulator2)))
+  (+ (foldl + 0
+            (map file-size (directory-files path)))
+     (foldl + 0
+            (map directory-size (directory-subdirectories path)))))
                                
 (check-expect (directory-size "test/test_2") 520)
 
 ; search-directory: string path -> (listof path)
-(define accumulator3 '())
-
 (define (search-directory name path)
-   (if (empty? (directory-files (build-path path)))
-      '()
-      (begin (for-each (λ (file)
-                         (if (string-contains? name (path->string (path-filename file)))
-                             (set! accumulator3 (cons file accumulator3))
-                             void))
-                         (directory-files (build-path path)))
-             accumulator3)))
+  (apply append(filter(λ(file) (string-contains? name
+                                                 (path->string (path-filename file))))
+                      (directory-files path))
+         (map (λ(directions)
+                (search-directory name directions))(directory-subdirectories path))))
 
 ; filter-directory: (path -> boolean) path -> (listof path)
 (define (filter-directory predicate path)
