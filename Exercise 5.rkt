@@ -83,7 +83,9 @@
 
 ; filter-directory: (path -> boolean) path -> (listof path)
 (define (filter-directory predicate path)
-  "fill me in")
+  (apply append (filter predicate (directory-files path))
+         (map (λ(sub-dir)(filter-directory predicate sub-dir))
+              (directory-subdirectories path))))
 
 ; find-file-type: string path -> (listof path)
 (define (find-file-type extension path)
