@@ -80,8 +80,15 @@
 
 ; find-file-type: string path -> (listof path)
 (define (find-file-type extension path)
-  "fill me in")
+  (append (filter (λ(file)(path-has-extension? file extension))
+                  (directory-files path))
+          (for-each (λ(subdir) (filter (λ(file)(path-has-extension? file extension))
+                                       (directory-files subdir)))
+                    (directory-subdirectories path))))
 
 ; file-type-disk-usage: string path -> number
 (define (file-type-disk-usage extension path)
-  "fill me in")
+  (if  (empty? (directory-subdirectories path))
+       (map file-size (find-file-type extension path))
+       (apply + (append (map file-size (find-file-type extension path))
+                        (map (file-type-disk-usage extension (directory-subdirectories path)))))))
