@@ -22,15 +22,34 @@
     ; for each file (leaf node) in the origin directory,
     ; copy it over to the destination directory
     (for-each (λ (file)
-         (unless (file-exists? (build-path from file)) ;added unless
-                ; print the name of the file being copied into the REPL
-                ; for more on how `printf` works, see Appendix 1 in the pdf
+                (unless (and (file-exists? (build-path to (path-filename file)))
+                             (>= (file-or-directory-modify-seconds
+                                 (build-path to (path-filename file)))
+                                (file-or-directory-modify-seconds
+                                 (build-path from (path-filename file)))));added unless
+                  ; print the name of the file being copied into the REPL
+                  ; for more on how `printf` works, see Appendix 1 in the pdf
                   (begin
-                  (printf "Copying file ~A to ~A~n" file to)
-                  (copy-file! file
-                              (build-path to (path-filename file))
-                              #true))))
+                    (printf "Copying file ~A to ~A~n" file to)
+                    (copy-file! file
+                                (build-path to (path-filename file))
+                                #true))))
               (directory-files from))
+
+    ; for each folder (recursive child node) in the origin directory,
+    ; recursively `backup!` its contents
+    (for-each (λ (subdir)
+                (unless (and (file-exists? (build-path to (path-filename subdir)))
+                             (>= (file-or-directory-modify-seconds
+                                 (build-path to (path-filename subdir)))
+                                (file-or-directory-modify-seconds
+                                 (build-path from (path-filename subdir))))) ;added unless
+                  (backup! subdir
+                           ; add the subdirectory's name to the
+                           ; end of the original destination path
+                           (build-path to (path-filename subdir)))))
+              (directory-subdirectories from))))
+
 
     ; for each folder (recursive child node) in the origin directory,
     ; recursively `backup!` its contents
@@ -80,15 +99,8 @@
 
 ; find-file-type: string path -> (listof path)
 (define (find-file-type extension path)
-  (append (filter (λ(file)(path-has-extension? file extension))
-                  (directory-files path))
-          (for-each (λ(subdir) (filter (λ(file)(path-has-extension? file extension))
-                                       (directory-files subdir)))
-                    (directory-subdirectories path))))
+  (filter-directory (λ(file)(path-has-extension? file extension)) path))
 
 ; file-type-disk-usage: string path -> number
 (define (file-type-disk-usage extension path)
-  (if  (empty? (directory-subdirectories path))
-       (map file-size (find-file-type extension path))
-       (apply + (append (map file-size (find-file-type extension path))
-                        (map (file-type-disk-usage extension (directory-subdirectories path)))))))
+  (apply + (map file-size (find-file-type extension path))))
